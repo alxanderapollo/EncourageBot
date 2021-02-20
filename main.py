@@ -5,7 +5,7 @@ import os
 #HTTP requests 
 import requests
 #HTTP requests ae returned as JSON so we need the lib
-import JSON
+import json
 
 #helper function - will return a quote from the API 
 def get_Quote():
@@ -40,7 +40,8 @@ async def on_message(message):
   # if message.content.startswith('$hello'):
   #   await message.channel.send('Hello!')
   if message.content.startswith('$inspire'):
-    await message.channel.send('Hello!')
+    quote = get_Quote()
+    await message.channel.send(quote)
 
 #run the bot
 #tokens are private
