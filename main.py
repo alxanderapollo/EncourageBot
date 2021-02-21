@@ -16,6 +16,10 @@ sad_words = ["sad","depressed","unhappy", "angry","miserable","depressing"]
 #words to encourage a user who is sad
 starter_encouragments=["cheer up!","hang in there"," you are a great person / bot!"]
 
+#if not responding
+if "responding" not in db.keys():
+  db["responding"] = True 
+
 #helper function - will return a quote from the API 
 def get_Quote():
   response = requests.get("https://zenquotes.io/api/random") #return a random quote
@@ -73,11 +77,13 @@ async def on_message(message):
     quote = get_Quote()
     await message.channel.send(quote)
 
+#if this is true it will respond to the sad words
+  if db["responding"]:
   #modding so the encouragements now come from the database
   #options will be where the db looks to get encouragements
-  options = starter_encouragments
-  if "encouragements" in db.keys():
-    options = options + db["encouragements"]
+    options = starter_encouragments
+    if "encouragements" in db.keys():
+      options = options + db["encouragements"]
 
 
   #check for sad words from the users
@@ -105,8 +111,26 @@ async def on_message(message):
       encouragements= db["encouragements"]
     
     await message.channel.send(encouragements) 
+  
+  #will allows the user to see the totality of the list os messages
+  #ability to list encouraging messages
+  if msg.startswith("$list"):
+    encouragements = [] #first check if the list is empty
+    if "encouragements" in db.keys():
+      encouragements = db["encouragements"]
+      await message.channel.send(encouragements)
 
 
+  #feature to allow the bot whether to respond to sad messages or not
+  if msg.startswith("$responding"):
+    value = msg.split("$responding ", 1)[1]
+
+    if value.lower() == "true":
+      db["responding"] = True
+      await message.channel.send("responding is on ")
+    else:
+      db["responding"] = False
+      await message.channel.send("responding is off ")    
 
 #run the bot
 #tokens are private
