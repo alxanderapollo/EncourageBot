@@ -6,6 +6,15 @@ import os
 import requests
 #HTTP requests ae returned as JSON so we need the lib
 import json
+import random
+#calls the replit data base
+from replit import db
+
+#sad words is list  of words that a user can use
+sad_words = ["sad","depressed","unhappy", "angry","miserable","depressing"]
+
+#words to encourage a user who is sad
+starter_encouragments=["cheer up!","hang in there"," you are a great person / bot!"]
 
 #helper function - will return a quote from the API 
 def get_Quote():
@@ -17,6 +26,26 @@ def get_Quote():
 #a stands for author
   quote = json_data[0]['q'] + " -" + json_data[0]['a']
   return quote
+
+#allow the user to update the encouragement listing
+def update_encouragements(encouragingMessage):
+  #db.keys() returns the list of keys already in the data base
+  #append the new encouragement to the list
+  if "encouragements" in db.keys():
+    encouragements = db["encouragements"]
+    encouragements.append(encouragingMessage) #append the new message to the list
+    #save it to the database
+    db["encouragements"] = encouragements
+  else:
+    #if there arent any encouragements in the data base then will create them
+    db["encouragements"] = [encouragingMessage]
+
+#give users the ability to delte encouragements
+def delete_encouragements(index):
+  encouragements = db["encouragements"]
+  if len(encouragements) > index:
+    del encouragements[index]
+    db["encouragements"] = encouragements
 
 
 #first event, this is the event that will happen as soon as its working and the bot is ready for use
@@ -34,7 +63,8 @@ async def on_ready():
 async def on_message(message):
   #if the message is the author itself, do nothing
   if message.author == client.user:
-    return 
+    return
+  msg = message.content 
   #example of how to use the bot
   #if message is from a client return hello
   # if message.content.startswith('$hello'):
@@ -42,6 +72,41 @@ async def on_message(message):
   if message.content.startswith('$inspire'):
     quote = get_Quote()
     await message.channel.send(quote)
+
+  #modding so the encouragements now come from the database
+  #options will be where the db looks to get encouragements
+  options = starter_encouragments
+  if "encouragements" in db.keys():
+    options = options + db["encouragements"]
+
+
+  #check for sad words from the users
+  if any(word in msg for word in sad_words):
+    await message.channel.send(random.choice(options))
+
+ #allows the user to add a message -----------------------
+  #new user submitted messages
+  #if. a message from the user starts with new
+  #then add the message to the db
+  if msg.startswith("$new"):
+    #array of a message that splits at new and returns the second element in the list 
+    encouraging_message = msg.split("new ", 1)[1]
+    update_encouragements(encouraging_message) #update the list of messages with the new encouraging message
+    #send something back to the user to know its working properly
+    await message.channel.send("New encouraging message added. ")
+
+#allow a user to delete a message --------------------------------
+  if msg.startswith("$del"):
+    # if there are no encouragements in the data base already it will return a an empty list
+    encouragements = [] #empty list
+    if "encouragements" in db.keys():
+      index = int(msg.split("$del",1)[1]) #we get the index of message we are going to delete
+      delete_encouragements(index) #we delete the message
+      encouragements= db["encouragements"]
+    
+    await message.channel.send(encouragements) 
+
+
 
 #run the bot
 #tokens are private
