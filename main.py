@@ -9,6 +9,7 @@ import json
 import random
 #calls the replit data base
 from replit import db
+from keep_Alive import keep_Alive
 
 #sad words is list  of words that a user can use
 sad_words = ["sad","depressed","unhappy", "angry","miserable","depressing"]
@@ -135,4 +136,6 @@ async def on_message(message):
 #run the bot
 #tokens are private
 #getenv will get the token stored in the env file
+
+keep_Alive() # keep the program running past an hour
 client.run(os.getenv('TOKEN'))
